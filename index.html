@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Birds of Cyprus — Field Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--navy:#0b0f1e;--navy2:#141828;--navy3:#1c2236;--card-bg:#171c2e;--gold:#d4a84b;--gold-light:#e8c97a;--flamingo:#f07c8c;--teal:#3db8a8;--sky:#5ba4cf;--text:#e8e4d8;--text-dim:#8a8a9a;--endemic-color:#f07c8c;--resident-color:#3db8a8;--winter-color:#5ba4cf;--summer-color:#f4a940;--passage-color:#9b8fd4;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--navy);color:var(--text);font-family:'Jost',sans-serif;font-weight:300;overflow-x:hidden;}
+.topnav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(11,15,30,.96);backdrop-filter:blur(20px);border-bottom:1px solid rgba(212,168,75,.12);padding:0 2rem;display:flex;align-items:center;height:52px;}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--gold-light);margin-right:2rem;white-space:nowrap;}
+.nav-tabs{display:flex;gap:0;flex:1;}
+.nav-tab{padding:0 1.1rem;height:52px;display:flex;align-items:center;font-size:.7rem;font-weight:400;letter-spacing:.08em;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;background:none;border-left:none;border-right:none;border-top:none;text-transform:uppercase;}
+.nav-tab:hover{color:var(--text);}
+.nav-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.page{display:none;padding-top:52px;}
+.page.active{display:block;}
+.map-page{display:none;padding-top:52px;height:100vh;flex-direction:column;}
+.map-page.active{display:flex;}
+.sightings-page{display:none;padding-top:52px;}
+.sightings-page.active{display:block;}
+
+/* HERO */
+.hero{position:relative;min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#1a2040,var(--navy) 65%);}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 20% 80%,rgba(61,184,168,.06),transparent 50%),radial-gradient(circle at 80% 20%,rgba(240,124,140,.06),transparent 50%);}
+.stars{position:absolute;inset:0;pointer-events:none;}
+.star{position:absolute;width:2px;height:2px;background:rgba(255,255,255,.4);border-radius:50%;animation:twinkle 3s ease-in-out infinite;}
+@keyframes twinkle{0%,100%{opacity:.3}50%{opacity:1}}
+.hero-content{position:relative;z-index:2;padding:2rem;}
+.hero-eyebrow{font-size:.7rem;font-weight:500;letter-spacing:.4em;color:var(--gold);text-transform:uppercase;margin-bottom:1.5rem;opacity:0;animation:fadeUp .8s .2s ease forwards;}
+.hero-title{font-family:'Cormorant Garamond',serif;font-size:clamp(3.5rem,9vw,8rem);font-weight:300;line-height:.9;letter-spacing:-.02em;margin-bottom:.5rem;opacity:0;animation:fadeUp .8s .4s ease forwards;}
+.hero-title em{font-style:italic;color:var(--gold-light);}
+.hero-subtitle{font-family:'Cormorant Garamond',serif;font-size:clamp(1rem,2.5vw,1.4rem);font-weight:300;font-style:italic;color:var(--text-dim);margin-bottom:2.5rem;opacity:0;animation:fadeUp .8s .6s ease forwards;}
+.hero-stats{display:flex;gap:3rem;justify-content:center;flex-wrap:wrap;opacity:0;animation:fadeUp .8s .8s ease forwards;}
+.stat{text-align:center;}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:2.8rem;font-weight:300;color:var(--gold-light);line-height:1;}
+.stat-label{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--text-dim);margin-top:.25rem;}
+.hero-cta{opacity:0;animation:fadeUp .8s 1s ease forwards;margin-top:2.5rem;display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
+.btn-p{padding:.65rem 2rem;background:var(--gold);color:var(--navy);border:none;border-radius:100px;font-family:'Jost',sans-serif;font-size:.78rem;font-weight:600;letter-spacing:.08em;cursor:pointer;transition:all .2s;}
+.btn-p:hover{background:var(--gold-light);transform:translateY(-2px);}
+.btn-g{padding:.65rem 2rem;background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.2);border-radius:100px;font-family:'Jost',sans-serif;font-size:.78rem;cursor:pointer;transition:all .2s;}
+.btn-g:hover{border-color:var(--gold);color:var(--gold);}
+.scroll-hint{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.5rem;color:var(--text-dim);font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;opacity:0;animation:fadeIn 1s 1.5s ease forwards;}
+.scroll-line{width:1px;height:40px;background:linear-gradient(to bottom,var(--gold),transparent);animation:sp 2s ease-in-out infinite;}
+@keyframes sp{0%,100%{opacity:.3}50%{opacity:1}}
+
+/* FILTER */
+.filter-section{position:sticky;top:52px;z-index:100;background:rgba(11,15,30,.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(212,168,75,.15);padding:.75rem 2rem;}
+.filter-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;}
+.filter-label{font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:var(--text-dim);white-space:nowrap;}
+.filters{display:flex;gap:.4rem;flex-wrap:wrap;}
+.filter-btn{padding:.32rem .85rem;border-radius:100px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--text-dim);font-family:'Jost',sans-serif;font-size:.7rem;cursor:pointer;transition:all .2s;}
+.filter-btn:hover{border-color:var(--gold);color:var(--text);}
+.filter-btn.active{background:var(--gold);border-color:var(--gold);color:var(--navy);font-weight:600;}
+.filter-btn[data-filter=endemic].active{background:var(--endemic-color);border-color:var(--endemic-color);}
+.filter-btn[data-filter=resident].active{background:var(--resident-color);border-color:var(--resident-color);}
+.filter-btn[data-filter=winter].active{background:var(--winter-color);border-color:var(--winter-color);}
+.filter-btn[data-filter=summer].active{background:var(--summer-color);border-color:var(--summer-color);}
+.filter-btn[data-filter=passage].active{background:var(--passage-color);border-color:var(--passage-color);}
+.search-wrap{margin-left:auto;}
+.search-input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:100px;padding:.32rem 1rem .32rem 2rem;color:var(--text);font-family:'Jost',sans-serif;font-size:.7rem;width:190px;transition:all .2s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' fill='%238a8a9a' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:.6rem center;}
+.search-input:focus{outline:none;border-color:var(--gold);}
+.search-input::placeholder{color:var(--text-dim);}
+.bird-count{font-size:.62rem;color:var(--text-dim);letter-spacing:.12em;white-space:nowrap;}
+
+/* GRID */
+.grid-section{max-width:1400px;margin:0 auto;padding:3rem 2rem 5rem;}
+.section-eyebrow{font-size:.62rem;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:2rem;}
+.bird-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;}
+
+/* CARD */
+.bird-card{background:var(--card-bg);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.06);transition:transform .3s,border-color .3s,box-shadow .3s;opacity:0;transform:translateY(20px);animation:cardReveal .5s ease forwards;}
+.bird-card:hover{transform:translateY(-5px);border-color:rgba(212,168,75,.3);box-shadow:0 20px 60px rgba(0,0,0,.4);}
+@keyframes cardReveal{to{opacity:1;transform:translateY(0)}}
+.card-image-wrap{position:relative;height:200px;overflow:hidden;background:var(--navy3);}
+.card-image{width:100%;height:200px;object-fit:cover;display:block;transition:transform .4s;}
+.bird-card:hover .card-image{transform:scale(1.05);}
+.card-image-fallback{width:100%;height:200px;display:none;align-items:center;justify-content:center;font-size:5rem;background:linear-gradient(135deg,var(--navy3),var(--navy2));}
+.card-body{padding:1.1rem 1.3rem 1.3rem;}
+.card-badge{display:inline-block;padding:.18rem .65rem;border-radius:100px;font-size:.57rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.6rem;}
+.badge-endemic{background:rgba(240,124,140,.15);color:var(--endemic-color);border:1px solid rgba(240,124,140,.3);}
+.badge-resident{background:rgba(61,184,168,.15);color:var(--resident-color);border:1px solid rgba(61,184,168,.3);}
+.badge-winter{background:rgba(91,164,207,.15);color:var(--winter-color);border:1px solid rgba(91,164,207,.3);}
+.badge-summer{background:rgba(244,169,64,.15);color:var(--summer-color);border:1px solid rgba(244,169,64,.3);}
+.badge-passage{background:rgba(155,143,212,.15);color:var(--passage-color);border:1px solid rgba(155,143,212,.3);}
+.card-name{font-family:'Cormorant Garamond',serif;font-size:1.45rem;font-weight:400;line-height:1.1;margin-bottom:.15rem;}
+.card-name-ru{font-size:.73rem;color:var(--text-dim);margin-bottom:.15rem;}
+.card-latin{font-family:'Cormorant Garamond',serif;font-size:.8rem;font-style:italic;color:var(--gold);margin-bottom:.65rem;}
+.card-desc{font-size:.73rem;line-height:1.65;color:var(--text-dim);margin-bottom:.75rem;}
+.card-season{display:flex;align-items:center;gap:.4rem;font-size:.6rem;color:var(--text-dim);margin-bottom:.85rem;}
+.season-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+/* SOUND PLAYER */
+.sound-player{background:rgba(61,184,168,.07);border:1px solid rgba(61,184,168,.15);border-radius:8px;padding:.65rem .9rem;margin-bottom:.85rem;}
+.sound-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem;}
+.sound-title{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);}
+.sound-fetch-btn{padding:.22rem .65rem;background:rgba(61,184,168,.15);border:1px solid rgba(61,184,168,.3);border-radius:100px;color:var(--teal);font-size:.58rem;font-family:'Jost',sans-serif;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.sound-fetch-btn:hover{background:rgba(61,184,168,.25);}
+.sound-fetch-btn:disabled{opacity:.5;cursor:default;}
+.sound-recordings{display:flex;flex-direction:column;gap:.3rem;margin-top:.35rem;}
+.sound-rec{display:flex;align-items:center;gap:.5rem;}
+.sound-rec-info{font-size:.56rem;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70px;flex-shrink:0;}
+.sound-rec audio{flex:1;height:26px;}
+.sound-status{font-size:.62rem;color:var(--text-dim);font-style:italic;}
+.sound-error-link{color:var(--teal);text-decoration:none;}
+.card-links{display:flex;gap:.4rem;flex-wrap:wrap;}
+.card-link{padding:.26rem .72rem;border-radius:100px;border:1px solid rgba(255,255,255,.1);font-size:.6rem;font-weight:500;letter-spacing:.06em;color:var(--text-dim);text-decoration:none;transition:all .2s;white-space:nowrap;}
+.card-link:hover{border-color:var(--gold);color:var(--gold);}
+.card-link.video:hover{border-color:var(--flamingo);color:var(--flamingo);}
+.card-link.ebird-lnk:hover{border-color:var(--teal);color:var(--teal);}
+
+/* MAP */
+.map-toolbar{padding:.75rem 2rem;background:var(--navy2);border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+.map-toolbar-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:400;color:var(--gold-light);}
+.map-legend{display:flex;gap:1rem;align-items:center;margin-left:auto;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:.4rem;font-size:.63rem;color:var(--text-dim);}
+.legend-dot{width:10px;height:10px;border-radius:50%;}
+.add-sighting-btn{padding:.38rem .95rem;background:var(--flamingo);color:white;border:none;border-radius:100px;font-family:'Jost',sans-serif;font-size:.7rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.add-sighting-btn:hover{background:#e06070;transform:translateY(-1px);}
+#map{flex:1;min-height:0;}
+.leaflet-popup-content-wrapper{background:var(--card-bg);border:1px solid rgba(212,168,75,.2);border-radius:10px;color:var(--text);box-shadow:0 10px 40px rgba(0,0,0,.5);}
+.leaflet-popup-tip{background:var(--card-bg);}
+.popup-title{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--gold-light);margin-bottom:.25rem;}
+.popup-desc{font-size:.68rem;color:var(--text-dim);line-height:1.55;margin-bottom:.4rem;}
+.popup-birds{font-size:.63rem;color:var(--teal);line-height:1.8;}
+.popup-link{display:inline-block;margin-top:.45rem;font-size:.63rem;color:var(--gold);text-decoration:none;}
+.map-hint{background:rgba(212,168,75,.1);border:1px solid rgba(212,168,75,.2);border-radius:8px;padding:.5rem 1rem;font-size:.65rem;color:var(--gold);margin-left:auto;}
+
+/* SIGHTINGS */
+.sightings-inner{max-width:1100px;margin:0 auto;padding:3rem 2rem;}
+.sightings-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;}
+.sightings-title{font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:300;}
+.sightings-empty{text-align:center;padding:5rem 2rem;color:var(--text-dim);}
+.sightings-empty-icon{font-size:3rem;margin-bottom:1rem;}
+.sightings-empty-text{font-family:'Cormorant Garamond',serif;font-size:1.5rem;margin-bottom:.5rem;}
+.sightings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1rem;}
+.sighting-card{background:var(--card-bg);border-radius:10px;border:1px solid rgba(255,255,255,.06);overflow:hidden;}
+.sighting-photo{width:100%;height:145px;object-fit:cover;}
+.sighting-photo-ph{width:100%;height:145px;background:linear-gradient(135deg,var(--navy3),var(--navy2));display:flex;align-items:center;justify-content:center;font-size:3rem;}
+.sighting-body{padding:.9rem 1rem;}
+.sighting-bird{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:400;color:var(--gold-light);margin-bottom:.2rem;}
+.sighting-meta{font-size:.68rem;color:var(--text-dim);margin-bottom:.35rem;}
+.sighting-note{font-size:.72rem;color:var(--text);line-height:1.55;margin-bottom:.5rem;}
+.sighting-delete{font-size:.6rem;color:var(--flamingo);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:1rem;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--navy2);border:1px solid rgba(212,168,75,.2);border-radius:14px;padding:2rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;color:var(--gold-light);margin-bottom:1.5rem;}
+.form-group{margin-bottom:1.1rem;}
+.form-label{display:block;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:.35rem;}
+.form-input,.form-select,.form-textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.55rem .85rem;color:var(--text);font-family:'Jost',sans-serif;font-size:.8rem;transition:border-color .2s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--gold);}
+.form-select option{background:var(--navy2);}
+.form-textarea{resize:vertical;min-height:75px;}
+.form-hint{font-size:.62rem;color:var(--text-dim);margin-top:.25rem;}
+.coord-row{display:flex;gap:.5rem;}
+.photo-upload-area{border:2px dashed rgba(255,255,255,.1);border-radius:8px;padding:1.3rem;text-align:center;cursor:pointer;transition:border-color .2s;}
+.photo-upload-area:hover{border-color:var(--gold);}
+.photo-upload-area input{display:none;}
+.photo-preview{width:100%;max-height:180px;object-fit:cover;border-radius:6px;margin-top:.7rem;display:none;}
+.modal-actions{display:flex;gap:.7rem;margin-top:1.4rem;}
+.btn-save{flex:1;padding:.65rem;background:var(--gold);color:var(--navy);border:none;border-radius:8px;font-family:'Jost',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-save:hover{background:var(--gold-light);}
+.btn-cancel{padding:.65rem 1.4rem;background:transparent;color:var(--text-dim);border:1px solid rgba(255,255,255,.1);border-radius:8px;font-family:'Jost',sans-serif;font-size:.8rem;cursor:pointer;transition:all .2s;}
+.btn-cancel:hover{border-color:rgba(255,255,255,.3);color:var(--text);}
+
+/* RESOURCES */
+.resources-section{max-width:1400px;margin:0 auto;padding:4rem 2rem;}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:300;margin-bottom:.4rem;}
+.section-sub{font-size:.7rem;color:var(--text-dim);letter-spacing:.15em;text-transform:uppercase;margin-bottom:2rem;}
+.resources-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:1rem;}
+.resource-card{padding:1.3rem;background:var(--card-bg);border-radius:10px;border:1px solid rgba(255,255,255,.06);text-decoration:none;color:inherit;display:block;transition:border-color .2s,transform .2s;}
+.resource-card:hover{border-color:rgba(212,168,75,.3);transform:translateY(-3px);}
+.resource-icon{font-size:1.4rem;margin-bottom:.6rem;}
+.resource-name{font-weight:500;font-size:.86rem;margin-bottom:.25rem;}
+.resource-desc{font-size:.68rem;color:var(--text-dim);line-height:1.6;}
+footer{text-align:center;padding:2.5rem 2rem;border-top:1px solid rgba(255,255,255,.06);font-size:.66rem;color:var(--text-dim);letter-spacing:.08em;}
+footer a{color:var(--gold);text-decoration:none;}
+.empty-state{text-align:center;padding:5rem 2rem;color:var(--text-dim);display:none;grid-column:1/-1;}
+.empty-state.visible{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="nav-logo">🐦 Birds of Cyprus</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('home')">Home</button>
+    <button class="nav-tab" onclick="showPage('atlas')">Atlas</button>
+    <button class="nav-tab" onclick="showPage('map')">Map</button>
+    <button class="nav-tab" onclick="showPage('sightings')">My Sightings</button>
+    <button class="nav-tab" onclick="showPage('resources')">Resources</button>
+  </div>
+</nav>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+<section class="hero">
+  <div class="stars" id="stars"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">Field Atlas · Eastern Mediterranean</p>
+    <h1 class="hero-title">Birds of<br><em>Cyprus</em></h1>
+    <p class="hero-subtitle">422 species · 3 endemics · one island at the crossroads of three continents</p>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num">422</div><div class="stat-label">Total Species</div></div>
+      <div class="stat"><div class="stat-num">3</div><div class="stat-label">Endemics</div></div>
+      <div class="stat"><div class="stat-num">57</div><div class="stat-label">Residents</div></div>
+      <div class="stat"><div class="stat-num">34</div><div class="stat-label">Bird Areas</div></div>
+    </div>
+    <div class="hero-cta">
+      <button class="btn-p" onclick="showPage('atlas')">Explore Atlas →</button>
+      <button class="btn-g" onclick="showPage('map')">🗺 View Map</button>
+    </div>
+  </div>
+  <div class="scroll-hint"><div class="scroll-line"></div>Explore</div>
+</section>
+</div>
+
+<!-- ATLAS -->
+<div class="page" id="page-atlas">
+<div class="filter-section">
+  <div class="filter-inner">
+    <span class="filter-label">Filter</span>
+    <div class="filters">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="endemic">🏆 Endemic</button>
+      <button class="filter-btn" data-filter="resident">🏠 Resident</button>
+      <button class="filter-btn" data-filter="winter">❄️ Winter</button>
+      <button class="filter-btn" data-filter="summer">☀️ Summer</button>
+      <button class="filter-btn" data-filter="passage">✈️ Passage</button>
+    </div>
+    <div class="search-wrap"><input class="search-input" id="search" type="text" placeholder="Search birds..."></div>
+    <span class="bird-count" id="birdCount"></span>
+  </div>
+</div>
+<section class="grid-section">
+  <p class="section-eyebrow">Species Gallery</p>
+  <div class="bird-grid" id="birdGrid">
+    <div class="empty-state" id="emptyState"><div style="font-size:3rem;margin-bottom:1rem">🔭</div><div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem">No birds found</div></div>
+  </div>
+</section>
+</div>
+
+<!-- MAP -->
+<div class="map-page" id="page-map">
+  <div class="map-toolbar">
+    <span class="map-toolbar-title">Birdwatching Map — Cyprus</span>
+    <div class="map-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#3db8a8"></div>Birding Site</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f07c8c"></div>My Sighting</div>
+    </div>
+    <span class="map-hint">💡 Click anywhere on map to pin a sighting</span>
+    <button class="add-sighting-btn" onclick="openModal()">+ Add Sighting</button>
+  </div>
+  <div id="map"></div>
+</div>
+
+<!-- SIGHTINGS -->
+<div class="sightings-page" id="page-sightings">
+  <div class="sightings-inner">
+    <div class="sightings-header">
+      <h2 class="sightings-title">My <em style="font-style:italic;color:var(--gold-light)">Sightings</em></h2>
+      <button class="add-sighting-btn" onclick="openModal()">+ Add Sighting</button>
+    </div>
+    <div id="sightingsContainer"></div>
+  </div>
+</div>
+
+<!-- RESOURCES -->
+<div class="page" id="page-resources">
+<section class="resources-section">
+  <h2 class="section-title">Resources &amp; <em style="font-style:italic;color:var(--gold-light)">References</em></h2>
+  <p class="section-sub">Databases · Sound Archives · Guides</p>
+  <div class="resources-grid">
+    <a class="resource-card" href="https://birdlifecyprus.org/birds-a-z/" target="_blank"><div class="resource-icon">🌿</div><div class="resource-name">BirdLife Cyprus</div><div class="resource-desc">Official A–Z species guide. Conservation, habitats, field notes.</div></a>
+    <a class="resource-card" href="https://ebird.org/region/CY" target="_blank"><div class="resource-icon">📍</div><div class="resource-name">eBird Cyprus</div><div class="resource-desc">Live sightings, hotspot maps, species checklists. Cornell Lab.</div></a>
+    <a class="resource-card" href="https://xeno-canto.org/explore?query=cyprus" target="_blank"><div class="resource-icon">🎵</div><div class="resource-name">Xeno-Canto</div><div class="resource-desc">Complete archive of bird calls recorded in Cyprus. All species.</div></a>
+    <a class="resource-card" href="https://avibase.bsc-eoc.org/checklist.jsp?region=CY" target="_blank"><div class="resource-icon">📋</div><div class="resource-name">Avibase Checklist</div><div class="resource-desc">Full taxonomic checklist — all 422 species.</div></a>
+    <a class="resource-card" href="https://www.inaturalist.org/explore?place_id=7152&taxon_id=3" target="_blank"><div class="resource-icon">📷</div><div class="resource-name">iNaturalist</div><div class="resource-desc">Citizen science photos with GPS. Real-time sightings.</div></a>
+    <a class="resource-card" href="https://www.macaulaylibrary.org/" target="_blank"><div class="resource-icon">🎬</div><div class="resource-name">Macaulay Library</div><div class="resource-desc">Largest archive of wildlife audio and video. Cornell.</div></a>
+    <a class="resource-card" href="https://osme.org/country-profiles/cyprus/" target="_blank"><div class="resource-icon">🗺️</div><div class="resource-name">OSME Profile</div><div class="resource-desc">Ornithological Society of Middle East. Endemic field notes.</div></a>
+    <a class="resource-card" href="https://shop.birdlifecyprus.org/en/product/birdwatching_in_cyprus/" target="_blank"><div class="resource-icon">📖</div><div class="resource-name">Field Guide Book</div><div class="resource-desc">"Birdwatching in Cyprus" — 125 sites, seasonal calendar.</div></a>
+    <a class="resource-card" href="https://visitakrotiri.cy/plan-your-visit/birdwatching/" target="_blank"><div class="resource-icon">🏖️</div><div class="resource-name">Visit Akrotiri</div><div class="resource-desc">Peninsula guide. Hides, trails, species lists.</div></a>
+    <a class="resource-card" href="https://en.wikipedia.org/wiki/List_of_birds_of_Cyprus" target="_blank"><div class="resource-icon">📑</div><div class="resource-name">Wikipedia List</div><div class="resource-desc">Annotated list with taxonomy and conservation status.</div></a>
+  </div>
+</section>
+<footer><p>Birds of Cyprus · Field Atlas · <a href="https://birdlifecyprus.org" target="_blank">BirdLife Cyprus</a> · <a href="https://ebird.org/region/CY" target="_blank">eBird</a> · <a href="https://xeno-canto.org" target="_blank">Xeno-Canto</a></p></footer>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title">📍 Add Sighting</div>
+    <div class="form-group">
+      <label class="form-label">Bird Species *</label>
+      <select class="form-select" id="sBird"><option value="">— Select species —</option></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Location Name</label>
+      <input class="form-input" id="sLoc" type="text" placeholder="e.g. Akrotiri Salt Lake">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Coordinates <span style="color:var(--teal);font-size:.58rem">(or click on Map first)</span></label>
+      <div class="coord-row">
+        <input class="form-input" id="sLat" type="number" step="0.0001" placeholder="Latitude">
+        <input class="form-input" id="sLng" type="number" step="0.0001" placeholder="Longitude">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Date</label>
+      <input class="form-input" id="sDate" type="date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <textarea class="form-textarea" id="sNote" placeholder="Behaviour, count, conditions..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Photo</label>
+      <div class="photo-upload-area" onclick="document.getElementById('photoInput').click()">
+        <div style="font-size:1.4rem;margin-bottom:.3rem">📷</div>
+        <div style="font-size:.7rem;color:var(--text-dim)">Click to upload photo</div>
+        <input type="file" id="photoInput" accept="image/*" onchange="previewPhoto(this)">
+        <img class="photo-preview" id="photoPreview">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveSighting()">Save Sighting</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const birds=[
+  {id:1,cat:'endemic',name:'Cyprus Warbler',ru:'Кипрская камышевка',lat:'Sylvia melanothorax',season:'Year-round',em:'🎵',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Cyprus_Warbler_Larnaca.jpg/400px-Cyprus_Warbler_Larnaca.jpg',desc:'National bird of Cyprus. Small greyish warbler of maquis scrub. Featured on the old ten-pound note. Declining due to competition from Sardinian Warbler.',eb:'https://ebird.org/species/cyiwar1',vid:'https://www.youtube.com/results?search_query=Cyprus+Warbler'},
+  {id:2,cat:'endemic',name:'Cyprus Wheatear',ru:'Кипрская каменка',lat:'Oenanthe cypriaca',season:'March – October',em:'🖤',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Oenanthe_cypriaca_-_Athalassa.jpg/400px-Oenanthe_cypriaca_-_Athalassa.jpg',desc:'Bold black-and-white endemic. Males sing from elevated perches for hours. Breeds April–June in rock crevices, walls, trees.',eb:'https://ebird.org/species/cyiwhe1',vid:'https://www.youtube.com/results?search_query=Cyprus+Wheatear'},
+  {id:3,cat:'endemic',name:'Cyprus Scops Owl',ru:'Кипрский сплюшка',lat:'Otus cyprius',season:'Year-round',em:'🦉',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/OtusCyprius.jpg/400px-OtusCyprius.jpg',desc:'Full species since 2016. Darker than Eurasian Scops Owl, lacks rufous morph. Voice distinctive. Vocal March–June.',eb:'https://ebird.org/species/cyisco1',vid:'https://www.youtube.com/results?search_query=Cyprus+Scops+Owl'},
+  {id:4,cat:'endemic',name:'Cyprus Jay',ru:'Кипрская сойка',lat:'Garrulus glandarius glaszneri',season:'Year-round',em:'💙',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Jay_-_geograph.org.uk_-_24490.jpg/400px-Jay_-_geograph.org.uk_-_24490.jpg',desc:'Endemic subspecies. Rufous forehead with black streaks, vivid blue wing patches. Noisy in Troodos and Paphos forests.',eb:'https://ebird.org/species/eurjay3',vid:'https://www.youtube.com/results?search_query=Cyprus+Jay'},
+  {id:5,cat:'resident',name:'Griffon Vulture',ru:'Белоголовый сип',lat:'Gyps fulvus',season:'Year-round',em:'🦅',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Gyps_fulvus_-_01.jpg/400px-Gyps_fulvus_-_01.jpg',desc:'Largest resident raptor. Episkopi Cliffs — biggest colony on the island. Impressive soaring on thermals.',eb:'https://ebird.org/species/grivul1',vid:'https://www.youtube.com/results?search_query=Griffon+Vulture+Cyprus'},
+  {id:6,cat:'resident',name:"Bonelli's Eagle",ru:'Орёл Бонелли',lat:'Aquila fasciata',season:'Year-round',em:'🦅',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Aquila_fasciata_-_01.jpg/400px-Aquila_fasciata_-_01.jpg',desc:'Powerful mountain eagle. Breeds on cliff ledges in Troodos. Fast and agile hunter.',eb:'https://ebird.org/species/bonea1',vid:'https://www.youtube.com/results?search_query=Bonelli+Eagle'},
+  {id:7,cat:'resident',name:'Peregrine Falcon',ru:'Сапсан',lat:'Falco peregrinus',season:'Year-round',em:'⚡',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Peregrine_Falcon_%28Falco_peregrinus%29_-_Hawk_Conservancy_Trust.jpg/400px-Peregrine_Falcon_%28Falco_peregrinus%29_-_Hawk_Conservancy_Trust.jpg',desc:'Fastest animal on Earth. Breeding pairs at Akrotiri cliffs. Dives at 300+ km/h.',eb:'https://ebird.org/species/perfal',vid:'https://www.youtube.com/results?search_query=Peregrine+Falcon'},
+  {id:8,cat:'resident',name:'Little Owl',ru:'Домовой сыч',lat:'Athena noctua',season:'Year-round',em:'🦉',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Athene_noctua_%28Flickr%29.jpg/400px-Athene_noctua_%28Flickr%29.jpg',desc:'Common resident of farmland and villages. Often seen in daylight on stone walls.',eb:'https://ebird.org/species/litowl',vid:'https://www.youtube.com/results?search_query=Little+Owl+Cyprus'},
+  {id:9,cat:'resident',name:'Common Hoopoe',ru:'Удод',lat:'Upupa epops',season:'Year-round',em:'👑',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Common_Hoopoe.jpg/400px-Common_Hoopoe.jpg',desc:'Unmistakable cinnamon-orange crest. Probes soil for insects with long curved bill.',eb:'https://ebird.org/species/comhoo1',vid:'https://www.youtube.com/results?search_query=Common+Hoopoe'},
+  {id:10,cat:'resident',name:'Black-winged Stilt',ru:'Ходулочник',lat:'Himantopus himantopus',season:'Year-round',em:'🪶',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Himantopus_himantopus_-_Bird_of_the_Wetlands.jpg/400px-Himantopus_himantopus_-_Bird_of_the_Wetlands.jpg',desc:'Elegant wader with extraordinarily long pink legs. Breeds at Akrotiri. Salt lake resident.',eb:'https://ebird.org/species/bkwsti',vid:'https://www.youtube.com/results?search_query=Black+winged+Stilt'},
+  {id:11,cat:'resident',name:'Spur-winged Lapwing',ru:'Шпорцевый чибис',lat:'Vanellus spinosus',season:'Year-round',em:'🐾',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Spur-winged_lapwing_%28Vanellus_spinosus%29.jpg/400px-Spur-winged_lapwing_%28Vanellus_spinosus%29.jpg',desc:'Bold and noisy plover. Breeds at Akrotiri Marsh. EU-threatened species.',eb:'https://ebird.org/species/spwlap1',vid:'https://www.youtube.com/results?search_query=Spur+winged+Lapwing'},
+  {id:12,cat:'resident',name:'Ferruginous Duck',ru:'Белоглазый нырок',lat:'Aythya nyroca',season:'Year-round',em:'🦆',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Aythya_nyroca.jpg/400px-Aythya_nyroca.jpg',desc:'Globally threatened diving duck. Nested at Akrotiri since 2005. Rich chestnut, white eye.',eb:'https://ebird.org/species/ferduc1',vid:'https://www.youtube.com/results?search_query=Ferruginous+Duck'},
+  {id:13,cat:'resident',name:'Black Francolin',ru:'Чёрный франколин',lat:'Francolinus francolinus',season:'Year-round',em:'🐓',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Francolinus_francolinus_-_Pakistan_-_male.jpg/400px-Francolinus_francolinus_-_Pakistan_-_male.jpg',desc:'Ground-dwelling game bird. Males black, chestnut, white. Heard more than seen.',eb:'https://ebird.org/species/blafra1',vid:'https://www.youtube.com/results?search_query=Black+Francolin'},
+  {id:14,cat:'resident',name:'Little Egret',ru:'Малая белая цапля',lat:'Egretta garzetta',season:'Year-round',em:'🕊️',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Little_Egret_%28Egretta_garzetta%29_-_Flickr.jpg/400px-Little_Egret_%28Egretta_garzetta%29_-_Flickr.jpg',desc:'All-white heron. Yellow feet flash in flight. Found along coast and wetlands.',eb:'https://ebird.org/species/litegr',vid:'https://www.youtube.com/results?search_query=Little+Egret'},
+  {id:15,cat:'winter',name:'Greater Flamingo',ru:'Розовый фламинго',lat:'Phoenicopterus roseus',season:'November – March',em:'🦩',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Flamingoes_in_Akrotiri_Salt_Lake%2C_Cyprus_MK%2B0049.jpg/400px-Flamingoes_in_Akrotiri_Salt_Lake%2C_Cyprus_MK%2B0049.jpg',desc:'Most iconic bird of Cyprus. Up to 20,000 at Akrotiri and Larnaca. Come from Iran, Turkey, Algeria, Spain.',eb:'https://ebird.org/species/grefla2',vid:'https://www.youtube.com/results?search_query=flamingos+cyprus+akrotiri'},
+  {id:16,cat:'winter',name:'Common Crane',ru:'Серый журавль',lat:'Grus grus',season:'October – March',em:'🦅',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Grus_grus_2_%28Marek_Szczepanek%29.jpg/400px-Grus_grus_2_%28Marek_Szczepanek%29.jpg',desc:'Large grey crane in significant numbers. Trumpeting calls overhead. Salt lakes and farmland.',eb:'https://ebird.org/species/comcra',vid:'https://www.youtube.com/results?search_query=Common+Crane+migration'},
+  {id:17,cat:'winter',name:'Northern Pintail',ru:'Шилохвость',lat:'Anas acuta',season:'October – March',em:'🦆',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Anas_acuta.jpg/400px-Anas_acuta.jpg',desc:'Sleek dabbling duck. Thousands winter at Akrotiri. Males: long tail, chocolate head.',eb:'https://ebird.org/species/norpin',vid:'https://www.youtube.com/results?search_query=Northern+Pintail'},
+  {id:18,cat:'summer',name:'European Bee-eater',ru:'Золотистая щурка',lat:'Merops apiaster',season:'April – September',em:'🌈',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Merops_apiaster_-_Flickr_-_Lip_Kee.jpg/400px-Merops_apiaster_-_Flickr_-_Lip_Kee.jpg',desc:"One of Europe's most colourful birds. Vivid flocks in spring. Nests in sandy banks.",eb:'https://ebird.org/species/eubeat1',vid:'https://www.youtube.com/results?search_query=European+Bee+eater'},
+  {id:19,cat:'summer',name:'European Roller',ru:'Сизоворонка',lat:'Coracias garrulus',season:'April – September',em:'💠',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Rollier_d%27Europe_%28Coracias_garrulus%29.jpg/400px-Rollier_d%27Europe_%28Coracias_garrulus%29.jpg',desc:'Dazzling turquoise and chestnut. Tumbling display flights. Scans for insects from wires.',eb:'https://ebird.org/species/eurrol1',vid:'https://www.youtube.com/results?search_query=European+Roller'},
+  {id:20,cat:'summer',name:"Eleonora's Falcon",ru:'Сокол Элеоноры',lat:'Falco eleonorae',season:'April – October',em:'🦅',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Eleonorafalke.jpg/400px-Eleonorafalke.jpg',desc:'Breeds on Akrotiri cliffs. Times breeding to intercept migrating passerines in autumn.',eb:'https://ebird.org/species/elefal1',vid:'https://www.youtube.com/results?search_query=Eleonora+Falcon'},
+  {id:21,cat:'summer',name:'Purple Heron',ru:'Рыжая цапля',lat:'Ardea purpurea',season:'March – October',em:'🦢',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Purple_heron_%28Ardea_purpurea%29.jpg/400px-Purple_heron_%28Ardea_purpurea%29.jpg',desc:'Slimmer than Grey Heron, rich rufous streaking. Favours dense reedbeds at Akrotiri.',eb:'https://ebird.org/species/purheg1',vid:'https://www.youtube.com/results?search_query=Purple+Heron'},
+  {id:22,cat:'passage',name:'Demoiselle Crane',ru:'Журавль-красавка',lat:'Anthropoides virgo',season:'Late August – September',em:'🕊️',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Demoiselle_Crane.jpg/400px-Demoiselle_Crane.jpg',desc:'Akrotiri = BEST site in Western Palearctic. Half the African population stops here late August. Arrive at dawn.',eb:'https://ebird.org/species/demcra1',vid:'https://www.youtube.com/results?search_query=Demoiselle+Crane+Cyprus'},
+  {id:23,cat:'passage',name:'Honey Buzzard',ru:'Осоед',lat:'Pernis apivorus',season:'April–May, August–October',em:'🦅',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Pernis_apivorus_2008.jpg/400px-Pernis_apivorus_2008.jpg',desc:'Hundreds pass Akrotiri on autumn afternoons. Variable plumage. Specialised in raiding wasp nests.',eb:'https://ebird.org/species/honbuz1',vid:'https://www.youtube.com/results?search_query=Honey+Buzzard+migration'},
+  {id:24,cat:'passage',name:'Red-footed Falcon',ru:'Кобчик',lat:'Falco vespertinus',season:'April–May, August–October',em:'🔴',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Falco_vespertinus_1_%28Bohuslav_Cr%C3%BAz%29.jpg/400px-Falco_vespertinus_1_%28Bohuslav_Cr%C3%BAz%29.jpg',desc:'Hundreds in autumn. Males slate-grey with red feet. Hunts insects in sociable flocks.',eb:'https://ebird.org/species/redfal1',vid:'https://www.youtube.com/results?search_query=Red+footed+Falcon'},
+  {id:25,cat:'passage',name:'Western Marsh Harrier',ru:'Болотный лунь',lat:'Circus aeruginosus',season:'March–May, August–November',em:'🪶',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Circus_aeruginosus_-_01.jpg/400px-Circus_aeruginosus_-_01.jpg',desc:'Long-winged harrier gliding low over reedbeds and open water. Peak passage autumn.',eb:'https://ebird.org/species/wemhar1',vid:'https://www.youtube.com/results?search_query=Marsh+Harrier'},
+  {id:26,cat:'passage',name:'Glossy Ibis',ru:'Каравайка',lat:'Plegadis falcinellus',season:'March–May, August–October',em:'🟤',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Plegadis_falcinellus_001.jpg/400px-Plegadis_falcinellus_001.jpg',desc:'Black at distance, metallic green-purple in sun. Long downcurved bill. Wetland stopover.',eb:'https://ebird.org/species/gloibi',vid:'https://www.youtube.com/results?search_query=Glossy+Ibis'},
+  {id:27,cat:'passage',name:'Short-toed Snake Eagle',ru:'Змееяд',lat:'Circaetus gallicus',season:'March–May, August–October',em:'🐍',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Circaetus_gallicus.jpg/400px-Circaetus_gallicus.jpg',desc:'Large eagle specialising in snakes. Hovers over open ground. Pale underparts, dark breast.',eb:'https://ebird.org/species/shsea1',vid:'https://www.youtube.com/results?search_query=Short+toed+Snake+Eagle'},
+  {id:28,cat:'passage',name:'Black Stork',ru:'Чёрный аист',lat:'Ciconia nigra',season:'March–May, August–October',em:'⬛',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Ciconia_nigra.jpg/400px-Ciconia_nigra.jpg',desc:'Shy forest stork. Iridescent black with white belly. Passes through singly or small groups.',eb:'https://ebird.org/species/blasto1',vid:'https://www.youtube.com/results?search_query=Black+Stork+migration'}
+];
+
+const locations=[
+  {name:'Akrotiri Peninsula',lat:34.594,lng:32.970,desc:'Best overall site. 300+ species. Flamingos in winter, Demoiselle Cranes in autumn.',key:'Greater Flamingo, Demoiselle Crane, Honey Buzzard, Eleonora\'s Falcon, Spur-winged Lapwing',url:'https://visitakrotiri.cy/plan-your-visit/birdwatching/'},
+  {name:'Larnaca Salt Lake',lat:34.884,lng:33.629,desc:'World-famous for wintering flamingos. Natura 2000 site.',key:'Greater Flamingo, Black-winged Stilt, Kentish Plover, various ducks',url:'https://rove.me/to/cyprus/greater-flamingos'},
+  {name:'Troodos Mountains',lat:34.924,lng:32.879,desc:'Only place to find all endemics together.',key:'Cyprus Warbler, Cyprus Wheatear, Cyprus Jay, Cyprus Coal Tit, Griffon Vulture',url:'https://ebird.org/hotspot/L883066'},
+  {name:'Cape Greco',lat:34.958,lng:34.078,desc:'Bottleneck for migrating passerines and raptors in autumn.',key:'Raptors, warblers, shrikes, seabirds on passage',url:'https://ebird.org/hotspot/L883067'},
+  {name:'Oroklini Lake',lat:34.953,lng:33.659,desc:'One of 7 natural wetlands in Cyprus. Special Protection Area.',key:'Black-winged Stilt, Spur-winged Lapwing, Greater Flamingo',url:'https://ebird.org/hotspot/L1060702'},
+  {name:'Paralimni Lake',lat:35.042,lng:33.971,desc:'Seasonal wetland. 186 species recorded.',key:'Greater Flamingo, herons, ducks, waders',url:'https://ebird.org/region/CY-04'}
+];
+
+// Stars
+const se=document.getElementById('stars');
+for(let i=0;i<80;i++){const s=document.createElement('div');s.className='star';s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';s.style.animationDelay=Math.random()*4+'s';s.style.animationDuration=(2+Math.random()*3)+'s';s.style.opacity=Math.random()*.5;se.appendChild(s);}
+
+// Nav
+let mapInit=false;
+function showPage(id){
+  document.querySelectorAll('.page,.map-page,.sightings-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const tabIdx={home:0,atlas:1,map:2,sightings:3,resources:4};
+  document.querySelectorAll('.nav-tab')[tabIdx[id]]?.classList.add('active');
+  if(id==='map'&&!mapInit){initMap();mapInit=true;}
+  if(id==='sightings') renderSightings();
+}
+
+// ── Cards
+function catColor(c){return{endemic:'var(--endemic-color)',resident:'var(--resident-color)',winter:'var(--winter-color)',summer:'var(--summer-color)',passage:'var(--passage-color)'}[c]||'var(--gold)';}
+function catLabel(c){return{endemic:'🏆 Endemic',resident:'🏠 Resident',winter:'❄️ Winter Visitor',summer:'☀️ Summer Visitor',passage:'✈️ Passage'}[c]||c;}
+
+function renderCards(list){
+  const g=document.getElementById('birdGrid');
+  g.querySelectorAll('.bird-card').forEach(c=>c.remove());
+  document.getElementById('emptyState').classList.toggle('visible',!list.length);
+  document.getElementById('birdCount').textContent=list.length+' species';
+  list.forEach((b,i)=>{
+    const c=document.createElement('div');c.className='bird-card';c.style.animationDelay=(i*.04)+'s';
+    c.innerHTML=`
+      <div class="card-image-wrap">
+        <img class="card-image" src="${b.img}" alt="${b.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="card-image-fallback" style="display:none">${b.em}</div>
+      </div>
+      <div class="card-body">
+        <span class="card-badge badge-${b.cat}">${catLabel(b.cat)}</span>
+        <div class="card-name">${b.name}</div>
+        <div class="card-name-ru">${b.ru}</div>
+        <div class="card-latin">${b.lat}</div>
+        <div class="card-desc">${b.desc}</div>
+        <div class="card-season"><span class="season-dot" style="background:${catColor(b.cat)}"></span>${b.season}</div>
+        <div class="sound-player">
+          <div class="sound-header">
+            <span class="sound-title">🎵 Bird Sounds · Xeno-Canto</span>
+            <button class="sound-fetch-btn" onclick="loadSounds(this,'${b.lat}')">Load recordings</button>
+          </div>
+          <div class="sound-recordings"></div>
+        </div>
+        <div class="card-links">
+          <a class="card-link ebird-lnk" href="${b.eb}" target="_blank">eBird →</a>
+          <a class="card-link video" href="${b.vid}" target="_blank">▶ Video</a>
+          <a class="card-link" href="https://xeno-canto.org/explore?query=${encodeURIComponent(b.lat)}" target="_blank">All sounds ↗</a>
+        </div>
+      </div>`;
+    g.appendChild(c);
+  });
+}
+
+// ── Xeno-Canto
+async function loadSounds(btn,latinName){
+  btn.disabled=true;btn.textContent='Loading...';
+  const box=btn.closest('.sound-player').querySelector('.sound-recordings');
+  box.innerHTML='<div class="sound-status">Fetching from Xeno-Canto...</div>';
+  try{
+    const q=encodeURIComponent(latinName.split(' ').slice(0,2).join(' '));
+    const r=await fetch(`https://xeno-canto.org/api/2/recordings?query=${q}&page=1`);
+    const d=await r.json();
+    const recs=(d.recordings||[]).slice(0,3);
+    if(!recs.length){box.innerHTML='<div class="sound-status">No recordings found</div>';btn.textContent='No results';return;}
+    box.innerHTML='';
+    recs.forEach(rec=>{
+      const url='https:'+rec.file;
+      const type=rec.type||'song';
+      const row=document.createElement('div');row.className='sound-rec';
+      row.innerHTML=`<span class="sound-rec-info" title="${type}">${type}</span><audio controls preload="none" src="${url}"></audio>`;
+      box.appendChild(row);
+    });
+    btn.textContent='✓ '+recs.length+' found';
+  }catch(e){
+    box.innerHTML=`<div class="sound-status">Load failed · <a class="sound-error-link" href="https://xeno-canto.org/explore?query=${encodeURIComponent(latinName)}" target="_blank">Open Xeno-Canto ↗</a></div>`;
+    btn.textContent='Try site ↗';btn.disabled=false;
+  }
+}
+
+let cf='all',cs='';
+function applyFilters(){
+  let l=birds;
+  if(cf!=='all') l=l.filter(b=>b.cat===cf);
+  if(cs){const q=cs.toLowerCase();l=l.filter(b=>b.name.toLowerCase().includes(q)||b.ru.toLowerCase().includes(q)||b.lat.toLowerCase().includes(q));}
+  renderCards(l);
+}
+document.querySelectorAll('.filter-btn').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');cf=btn.dataset.filter;applyFilters();});});
+document.getElementById('search').addEventListener('input',e=>{cs=e.target.value.trim();applyFilters();});
+renderCards(birds);
+
+// ── Map
+let clickLL=null;
+function initMap(){
+  const map=L.map('map',{center:[34.9,32.9],zoom:9});
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap, © CARTO',maxZoom:19}).addTo(map);
+  const siteIcon=L.divIcon({html:'<div style="width:14px;height:14px;background:#3db8a8;border-radius:50%;border:2px solid rgba(255,255,255,.7);box-shadow:0 0 10px rgba(61,184,168,.7)"></div>',className:'',iconAnchor:[7,7]});
+  const myIcon=L.divIcon({html:'<div style="width:14px;height:14px;background:#f07c8c;border-radius:50%;border:2px solid rgba(255,255,255,.7);box-shadow:0 0 10px rgba(240,124,140,.7)"></div>',className:'',iconAnchor:[7,7]});
+  locations.forEach(loc=>{
+    L.marker([loc.lat,loc.lng],{icon:siteIcon}).addTo(map).bindPopup(
+      `<div class="popup-title">${loc.name}</div><div class="popup-desc">${loc.desc}</div><div class="popup-birds"><strong>Key species:</strong><br>${loc.key}</div><a class="popup-link" href="${loc.url}" target="_blank">More info →</a>`);
+  });
+  // My sightings on map
+  getSightings().forEach(s=>{
+    if(s.lat&&s.lng) L.marker([s.lat,s.lng],{icon:myIcon}).addTo(map).bindPopup(`<div class="popup-title">${s.bird}</div><div class="popup-desc">${s.date||''}${s.location?' · '+s.location:''}</div><div class="popup-desc">${s.note||''}</div>`);
+  });
+  map.on('click',e=>{
+    clickLL=e.latlng;
+    document.getElementById('sLat').value=e.latlng.lat.toFixed(5);
+    document.getElementById('sLng').value=e.latlng.lng.toFixed(5);
+    L.popup().setLatLng(e.latlng).setContent('<div style="color:#0b0f1e;font-size:.8rem;font-weight:600">📍 Coordinates saved!<br><span style="font-weight:400">Now go to Add Sighting</span></div>').openOn(map);
+  });
+}
+
+// ── Sightings
+function getSightings(){return JSON.parse(localStorage.getItem('cyprusBirds')||'[]');}
+function setSightings(d){localStorage.setItem('cyprusBirds',JSON.stringify(d));}
+
+function openModal(){
+  const sel=document.getElementById('sBird');
+  sel.innerHTML='<option value="">— Select species —</option>';
+  birds.forEach(b=>{const o=document.createElement('option');o.value=b.name;o.textContent=`${b.name} · ${b.ru}`;sel.appendChild(o);});
+  document.getElementById('sDate').value=new Date().toISOString().split('T')[0];
+  if(clickLL){document.getElementById('sLat').value=clickLL.lat.toFixed(5);document.getElementById('sLng').value=clickLL.lng.toFixed(5);}
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
+function previewPhoto(input){
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();r.onload=e=>{const i=document.getElementById('photoPreview');i.src=e.target.result;i.style.display='block';};r.readAsDataURL(f);
+}
+function saveSighting(){
+  const bird=document.getElementById('sBird').value;
+  if(!bird){alert('Please select a bird species');return;}
+  const s={id:Date.now(),bird,location:document.getElementById('sLoc').value,lat:parseFloat(document.getElementById('sLat').value)||null,lng:parseFloat(document.getElementById('sLng').value)||null,date:document.getElementById('sDate').value,note:document.getElementById('sNote').value,photo:document.getElementById('photoPreview').src||null};
+  const all=getSightings();all.unshift(s);setSightings(all);
+  closeModal();
+  ['sBird','sLoc','sLat','sLng','sNote'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('photoPreview').style.display='none';
+  clickLL=null;
+  showPage('sightings');
+}
+function deleteSighting(id){setSightings(getSightings().filter(s=>s.id!==id));renderSightings();}
+function renderSightings(){
+  const con=document.getElementById('sightingsContainer');
+  const all=getSightings();
+  if(!all.length){con.innerHTML=`<div class="sightings-empty"><div class="sightings-empty-icon">🔭</div><div class="sightings-empty-text">No sightings yet</div><div style="font-size:.8rem;color:var(--text-dim)">Click "+ Add Sighting" or tap a location on the Map</div></div>`;return;}
+  con.innerHTML=`<div class="sightings-grid">${all.map(s=>`<div class="sighting-card">${s.photo&&s.photo.startsWith('data:')?`<img class="sighting-photo" src="${s.photo}">`:`<div class="sighting-photo-ph">${birds.find(b=>b.name===s.bird)?.em||'🐦'}</div>`}<div class="sighting-body"><div class="sighting-bird">${s.bird}</div><div class="sighting-meta">${s.date||''}${s.location?' · '+s.location:''}${s.lat?' · '+Number(s.lat).toFixed(3)+'°N':''}</div>${s.note?`<div class="sighting-note">${s.note}</div>`:''}<button class="sighting-delete" onclick="deleteSighting(${s.id})">Delete</button></div></div>`).join('')}</div>`;
+}
+document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('modalOverlay'))closeModal();});
+</script>
+</body>
+</html>
