@@ -1654,7 +1654,7 @@ renderCards(birds);
       const c=document.createElement('canvas');c.width=c.height=size;
       const x=c.getContext('2d');
       x.beginPath();x.arc(size/2,size/2,size/2,0,Math.PI*2);x.closePath();x.clip();
-      x.drawImage(img,0,0,1254,950,0,0,size,size);
+      x.drawImage(img,297,150,660,660,0,0,size,size);
       return c.toDataURL('image/png');
     }
     const fav=document.querySelector('link[rel="icon"]');if(fav)fav.href=circle(64);
