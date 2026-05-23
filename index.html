@@ -1358,37 +1358,35 @@ function getImgSrc(url){
   return m?`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(m[1])}?width=400`:url;
 }
 
-// Queue-based lazy wiki image loader
-const _wikiQ=[];let _wikiBusy=false;
-async function _processWikiQ(){
-  if(_wikiBusy)return;_wikiBusy=true;
-  while(_wikiQ.length){
+// Parallel lazy image loader (Wikipedia → iNaturalist fallback)
+const _wikiQ=[];let _wikiRunning=0;const _WIKI_MAX=4;
+function _processWikiQ(){
+  while(_wikiRunning<_WIKI_MAX&&_wikiQ.length){
     const{imgEl,birdName,latinName}=_wikiQ.shift();
-    await _wikiLoad(imgEl,birdName,latinName);
-    await new Promise(r=>setTimeout(r,80));
+    _wikiRunning++;
+    _wikiLoad(imgEl,birdName,latinName).finally(()=>{_wikiRunning--;_processWikiQ();});
   }
-  _wikiBusy=false;
 }
 async function _wikiLoad(imgEl,birdName,latinName){
   if(!imgEl.isConnected)return;
-  const genus=latinName.split(' ')[0];
-  const queries=[
-    latinName.split(' ').slice(0,2).join('_'),
-    birdName.replace(/ /g,'_'),
-    genus+'_'+latinName.split(' ')[1]
-  ].filter(Boolean);
-  for(const q of queries){
-    try{
-      const r=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(q)}`);
-      if(!r.ok)continue;
-      const d=await r.json();
-      if(d.thumbnail&&d.thumbnail.source){
-        imgEl.onerror=null;imgEl.style.display='block';
-        const fb=imgEl.nextElementSibling;if(fb)fb.style.display='none';
-        imgEl.src=d.thumbnail.source;return;
-      }
-    }catch(e){}
-  }
+  const species=latinName.split(' ').slice(0,2).join('_');
+  const _show=src=>{imgEl.onerror=null;imgEl.style.display='block';imgEl.src=src;const fb=imgEl.nextElementSibling;if(fb)fb.style.display='none';};
+  // 1. Wikipedia REST API
+  try{
+    const r=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(species)}`);
+    if(r.ok){const d=await r.json();if(d.thumbnail?.source){_show(d.thumbnail.source);return;}}
+  }catch(e){}
+  // 2. Wikipedia by common English name
+  try{
+    const r=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(birdName.replace(/ /g,'_'))}`);
+    if(r.ok){const d=await r.json();if(d.thumbnail?.source){_show(d.thumbnail.source);return;}}
+  }catch(e){}
+  // 3. iNaturalist fallback
+  try{
+    const q=latinName.split(' ').slice(0,2).join('+');
+    const r=await fetch(`https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(q)}&per_page=1&rank=species`);
+    if(r.ok){const d=await r.json();const photo=d.results?.[0]?.default_photo?.medium_url;if(photo){_show(photo);return;}}
+  }catch(e){}
   imgEl.style.display='none';
   const fb=imgEl.nextElementSibling;if(fb)fb.style.display='flex';
 }
