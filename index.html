@@ -187,6 +187,12 @@ body{background:var(--navy);color:var(--text);font-family:'Jost',sans-serif;font
 .popup-birds{font-size:.63rem;color:var(--teal);line-height:1.8;}
 .popup-link{display:inline-block;margin-top:.45rem;font-size:.63rem;color:var(--gold);text-decoration:none;}
 .map-hint{background:rgba(212,168,75,.1);border:1px solid rgba(212,168,75,.2);border-radius:8px;padding:.5rem 1rem;font-size:.65rem;color:var(--gold);margin-left:auto;}
+.range-banner{align-items:center;gap:.7rem;padding:.4rem .9rem;background:rgba(212,168,75,.12);border:1px solid rgba(212,168,75,.5);border-radius:6px;font-size:.75rem;color:var(--gold);}
+.range-banner-clear{background:none;border:1px solid rgba(212,168,75,.35);color:var(--gold);border-radius:4px;padding:.15rem .5rem;cursor:pointer;font-size:.7rem;transition:background .15s;}
+.range-banner-clear:hover{background:rgba(212,168,75,.2);}
+.btn-show-range{display:inline-flex;align-items:center;gap:.4rem;margin-bottom:1.2rem;padding:.45rem 1rem;background:rgba(212,168,75,.1);border:1px solid rgba(212,168,75,.35);border-radius:6px;color:var(--gold);cursor:pointer;font-size:.8rem;transition:background .15s;}
+.btn-show-range:hover{background:rgba(212,168,75,.2);}
+@keyframes rangePulse{0%{box-shadow:0 0 0 0 rgba(212,168,75,.7)}70%{box-shadow:0 0 0 12px rgba(212,168,75,0)}100%{box-shadow:0 0 0 0 rgba(212,168,75,0)}}
 
 /* SIGHTINGS */
 .sightings-inner{max-width:1100px;margin:0 auto;padding:3rem 2rem;}
@@ -391,6 +397,11 @@ footer a{color:var(--gold);text-decoration:none;}
     <div class="map-legend">
       <div class="legend-item"><div class="legend-dot" style="background:#3db8a8"></div>Birding Site</div>
       <div class="legend-item"><div class="legend-dot" style="background:#f07c8c"></div>My Sighting</div>
+      <div class="legend-item" id="rangeLegendItem" style="display:none"><div class="legend-dot" style="background:#d4a84b;animation:rangePulse 1.5s infinite"></div>Species Range</div>
+    </div>
+    <div id="birdRangeBanner" class="range-banner" style="display:none">
+      🗺 Range: <strong id="rangeBannerName"></strong>
+      <button class="range-banner-clear" onclick="clearBirdRange()">✕ Clear</button>
     </div>
     <span class="map-hint">💡 Click anywhere on map to pin a sighting</span>
     <button class="add-sighting-btn" onclick="openModal()">+ Add Sighting</button>
@@ -1534,6 +1545,37 @@ function goToMap(locId){
   if(loc&&window._leafletMap){window._leafletMap.setView([loc.lat,loc.lng],12);}
   document.getElementById('mapBackBtn').style.display='flex';
 }
+let _birdRangeLayer=null;
+function showBirdRange(birdId){
+  const b=birds.find(x=>x.id===birdId);
+  if(!b||!b.locs||!b.locs.length)return;
+  hideBirdDetail();
+  showPage('map');
+  const map=window._leafletMap;
+  if(_birdRangeLayer){map.removeLayer(_birdRangeLayer);}
+  _birdRangeLayer=L.layerGroup().addTo(map);
+  const rangeIcon=L.divIcon({html:'<div style="width:22px;height:22px;background:#d4a84b;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 0 rgba(212,168,75,.7);animation:rangePulse 1.5s infinite"></div>',className:'',iconAnchor:[11,11]});
+  const pts=[];
+  b.locs.forEach(locId=>{
+    const loc=locations.find(l=>l.id===locId);
+    if(loc){
+      pts.push([loc.lat,loc.lng]);
+      L.marker([loc.lat,loc.lng],{icon:rangeIcon,zIndexOffset:1000})
+        .addTo(_birdRangeLayer)
+        .bindPopup(`<div class="popup-title">${loc.name}</div><div class="popup-desc"><strong>${b.name}</strong> · ${b.season}</div>`);
+    }
+  });
+  if(pts.length===1)map.setView(pts[0],12);
+  else if(pts.length>1)map.fitBounds(pts,{padding:[60,60]});
+  document.getElementById('rangeBannerName').textContent=b.name;
+  document.getElementById('birdRangeBanner').style.display='flex';
+  document.getElementById('rangeLegendItem').style.display='flex';
+}
+function clearBirdRange(){
+  if(_birdRangeLayer&&window._leafletMap){window._leafletMap.removeLayer(_birdRangeLayer);_birdRangeLayer=null;}
+  document.getElementById('birdRangeBanner').style.display='none';
+  document.getElementById('rangeLegendItem').style.display='none';
+}
 
 // Xeno-Canto
 async function loadSounds(btn,latinName){
@@ -1629,6 +1671,7 @@ function showBirdDetail(id){
   hero.querySelectorAll('.carousel-btn,.carousel-dots').forEach(el=>el.remove());
   hero.insertAdjacentHTML('beforeend',prevnext+dots);
   const locsHtml=(b.locs&&b.locs.length)?'<div class="bird-locs" style="margin-bottom:1.2rem">'+b.locs.map(l=>`<span class="loc-badge" onclick="hideBirdDetail();goToMap('${l}')" title="View on map">${locLabel[l]||l}</span>`).join('')+'</div>':'';
+  const rangeBtn=(b.locs&&b.locs.length)?`<button class="btn-show-range" onclick="showBirdRange(${b.id})">🗺 Show range on map</button>`:'';
   document.getElementById('detailBody').innerHTML=`
     <span class="card-badge badge-${b.cat}" style="margin-bottom:.8rem;display:inline-block">${catLabel(b.cat)}</span>
     <div class="detail-name">${b.name}</div>
@@ -1637,6 +1680,7 @@ function showBirdDetail(id){
     <div class="detail-desc">${b.desc}</div>
     <div class="detail-season"><span class="season-dot" style="background:${catColor(b.cat)}"></span>${b.season}</div>
     ${locsHtml}
+    ${rangeBtn}
     <div class="card-links" style="margin-top:1.5rem">
       <a class="card-link ebird-lnk" href="${b.eb}" target="_blank">eBird →</a>
       <a class="card-link video" href="${b.vid}" target="_blank">▶ Video</a>
