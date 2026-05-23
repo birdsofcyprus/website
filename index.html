@@ -991,17 +991,10 @@ function renderCards(list){
         <div class="card-desc">${b.desc}</div>
         <div class="card-season"><span class="season-dot" style="background:${catColor(b.cat)}"></span>${b.season}</div>
         ${locsHtml}
-        <div class="sound-player">
-          <div class="sound-header">
-            <span class="sound-title">🎵 Bird Sounds · Xeno-Canto</span>
-            <button class="sound-fetch-btn" onclick="loadSounds(this,'${b.lat}')">Load recordings</button>
-          </div>
-          <div class="sound-recordings"></div>
-        </div>
         <div class="card-links">
           <a class="card-link ebird-lnk" href="${b.eb}" target="_blank">eBird →</a>
           <a class="card-link video" href="${b.vid}" target="_blank">▶ Video</a>
-          <a class="card-link" href="https://xeno-canto.org/explore?query=${encodeURIComponent(b.lat)}" target="_blank">All sounds ↗</a>
+          <a class="card-link" href="https://xeno-canto.org/explore?query=${encodeURIComponent(b.lat.split(' ').slice(0,2).join(' '))}" target="_blank">🎵 Sounds ↗</a>
         </div>
       </div>`;
     g.appendChild(c);
