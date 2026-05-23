@@ -64,6 +64,11 @@ body{background:var(--navy);color:var(--text);font-family:'Jost',sans-serif;font
 .cal-row-label strong{display:block;font-weight:500;color:var(--text);}
 .cal-cell{height:20px;border-radius:3px;}
 .cal-cell.empty{background:rgba(255,255,255,.04);border-radius:3px;}
+.cal-cell:not(.empty){cursor:pointer;transition:opacity .15s,transform .12s;}
+.cal-cell:not(.empty):hover{opacity:.65;transform:scaleY(1.25);}
+.cal-filter-banner{align-items:center;gap:.5rem;padding:.3rem .85rem;background:rgba(212,168,75,.12);border:1px solid rgba(212,168,75,.45);border-radius:100px;font-size:.72rem;color:var(--gold);white-space:nowrap;}
+.cal-filter-clear{background:none;border:none;color:var(--gold);cursor:pointer;font-size:.85rem;padding:0;line-height:1;opacity:.7;transition:opacity .15s;}
+.cal-filter-clear:hover{opacity:1;}
 .cal-resident{background:rgba(61,184,168,.55);}
 .cal-endemic{background:rgba(240,124,140,.55);}
 .cal-summer{background:rgba(244,169,64,.55);}
@@ -378,6 +383,10 @@ footer a{color:var(--gold);text-decoration:none;}
       <button class="filter-btn" data-filter="passage">✈️ Passage</button>
     </div>
     <div class="search-wrap"><input class="search-input" id="search" type="text" placeholder="Search birds..."></div>
+    <div id="calFilterBanner" class="cal-filter-banner" style="display:none">
+      <span id="calFilterText"></span>
+      <button class="cal-filter-clear" onclick="clearCalFilter()" title="Clear">✕</button>
+    </div>
     <span class="bird-count" id="birdCount"></span>
   </div>
 </div>
@@ -1434,31 +1443,53 @@ const se=document.getElementById('stars');
 for(let i=0;i<80;i++){const s=document.createElement('div');s.className='star';s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';s.style.animationDelay=Math.random()*4+'s';s.style.animationDuration=(2+Math.random()*3)+'s';s.style.opacity=Math.random()*.5;se.appendChild(s);}
 
 // Seasonal calendar
+const _calMonthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const _calCatNames={endemic:'🏆 Endemics',resident:'🏠 Residents',summer:'☀️ Summer visitors',winter:'❄️ Winter visitors',passage:'✈️ Passage migrants'};
 (function buildCalendar(){
   const months=['J','F','M','A','M','J','J','A','S','O','N','D'];
   const rows=[
-    {label:'<strong>Endemics</strong>Year-round',cls:'cal-endemic',active:[1,2,3,4,5,6,7,8,9,10,11,12]},
-    {label:'<strong>Residents</strong>Year-round',cls:'cal-resident',active:[1,2,3,4,5,6,7,8,9,10,11,12]},
-    {label:'<strong>Summer</strong>Mar – Oct',cls:'cal-summer',active:[3,4,5,6,7,8,9,10]},
-    {label:'<strong>Winter</strong>Oct – Mar',cls:'cal-winter',active:[1,2,3,10,11,12]},
-    {label:'<strong>Passage</strong>Mar–May, Aug–Nov',cls:'cal-passage',active:[3,4,5,8,9,10,11]}
+    {label:'<strong>Endemics</strong>Year-round',cls:'cal-endemic',cat:'endemic',active:[1,2,3,4,5,6,7,8,9,10,11,12]},
+    {label:'<strong>Residents</strong>Year-round',cls:'cal-resident',cat:'resident',active:[1,2,3,4,5,6,7,8,9,10,11,12]},
+    {label:'<strong>Summer</strong>Mar – Oct',cls:'cal-summer',cat:'summer',active:[3,4,5,6,7,8,9,10]},
+    {label:'<strong>Winter</strong>Oct – Mar',cls:'cal-winter',cat:'winter',active:[1,2,3,10,11,12]},
+    {label:'<strong>Passage</strong>Mar–May, Aug–Nov',cls:'cal-passage',cat:'passage',active:[3,4,5,8,9,10,11]}
   ];
   const g=document.getElementById('calGrid');
-  // Header row
   g.appendChild(Object.assign(document.createElement('div'),{className:'cal-month-header'}));
   months.forEach(m=>{const d=document.createElement('div');d.className='cal-month-header';d.textContent=m;g.appendChild(d);});
-  // Data rows
   rows.forEach(row=>{
     const lbl=document.createElement('div');lbl.className='cal-row-label';lbl.innerHTML=row.label;g.appendChild(lbl);
     months.forEach((_,i)=>{
       const cell=document.createElement('div');
       const mo=i+1;
-      cell.className='cal-cell '+(row.active.includes(mo)?row.cls:'empty');
-      cell.title=months[i];
+      const isActive=row.active.includes(mo);
+      cell.className='cal-cell '+(isActive?row.cls:'empty');
+      cell.title=isActive?`${_calCatNames[row.cat]} · ${_calMonthNames[i]} — click to explore`:'';
+      if(isActive) cell.addEventListener('click',()=>calFilter(row.cat,i));
       g.appendChild(cell);
     });
   });
 })();
+function calFilter(cat,monthIdx){
+  // Set atlas category filter
+  cf=cat;
+  document.querySelectorAll('.filter-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.filter===cat);
+  });
+  // Show banner
+  const text=`${_calCatNames[cat]} · ${_calMonthNames[monthIdx]}`;
+  document.getElementById('calFilterText').textContent=text;
+  document.getElementById('calFilterBanner').style.display='flex';
+  // Navigate and render
+  showPage('atlas');
+  applyFilters();
+}
+function clearCalFilter(){
+  cf='all';
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filter==='all'));
+  document.getElementById('calFilterBanner').style.display='none';
+  applyFilters();
+}
 
 // Nav
 let mapInit=false;
