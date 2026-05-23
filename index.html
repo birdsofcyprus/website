@@ -1451,16 +1451,22 @@ for(let i=0;i<80;i++){const s=document.createElement('div');s.className='star';s
 
 // Nav
 let mapInit=false;
+let _prevPage='home';
 function showPage(id){
   document.querySelectorAll('.page,.map-page,.sightings-page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   const tabIdx={home:0,atlas:1,map:2,sightings:3,sites:4,resources:5,contacts:6};
   document.querySelectorAll('.nav-tab')[tabIdx[id]]?.classList.add('active');
-  if(id==='map'){if(!mapInit){initMap();mapInit=true;} document.getElementById('mapBackBtn').style.display='none';}
+  if(id==='map'){
+    if(!mapInit){initMap();mapInit=true;}
+    document.getElementById('mapBackBtn').style.display='flex';
+  } else {
+    _prevPage=id;
+  }
   if(id==='sightings') renderSightings();
 }
-function mapGoBack(){showPage('atlas');}
+function mapGoBack(){showPage(_prevPage);}
 
 
 function catColor(c){return{endemic:'var(--endemic-color)',resident:'var(--resident-color)',winter:'var(--winter-color)',summer:'var(--summer-color)',passage:'var(--passage-color)'}[c]||'var(--gold)';}
