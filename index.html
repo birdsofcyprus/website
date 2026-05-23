@@ -382,6 +382,7 @@ footer a{color:var(--gold);text-decoration:none;}
 <!-- MAP -->
 <div class="map-page" id="page-map">
   <div class="map-toolbar">
+    <button id="mapBackBtn" class="detail-back-btn" style="display:none" onclick="mapGoBack()">&#8592; Back</button>
     <span class="map-toolbar-title">Birdwatching Map — Cyprus</span>
     <div class="map-legend">
       <div class="legend-item"><div class="legend-dot" style="background:#3db8a8"></div>Birding Site</div>
@@ -986,9 +987,11 @@ function showPage(id){
   document.getElementById('page-'+id).classList.add('active');
   const tabIdx={home:0,atlas:1,map:2,sightings:3,sites:4,resources:5};
   document.querySelectorAll('.nav-tab')[tabIdx[id]]?.classList.add('active');
-  if(id==='map'&&!mapInit){initMap();mapInit=true;}
+  if(id==='map'){if(!mapInit){initMap();mapInit=true;} document.getElementById('mapBackBtn').style.display='none';}
   if(id==='sightings') renderSightings();
 }
+function mapGoBack(){showPage('atlas');}
+
 
 function catColor(c){return{endemic:'var(--endemic-color)',resident:'var(--resident-color)',winter:'var(--winter-color)',summer:'var(--summer-color)',passage:'var(--passage-color)'}[c]||'var(--gold)';}
 function catLabel(c){return{endemic:'🏆 Endemic',resident:'🏠 Resident',winter:'❄️ Winter Visitor',summer:'☀️ Summer Visitor',passage:'✈️ Passage'}[c]||c;}
@@ -1045,9 +1048,8 @@ function goToImg(birdId,idx){
 function goToMap(locId){
   showPage('map');
   const loc=locations.find(l=>l.id===locId);
-  if(loc&&window._leafletMap){
-    window._leafletMap.setView([loc.lat,loc.lng],12);
-  }
+  if(loc&&window._leafletMap){window._leafletMap.setView([loc.lat,loc.lng],12);}
+  document.getElementById('mapBackBtn').style.display='flex';
 }
 
 // Xeno-Canto
