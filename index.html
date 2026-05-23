@@ -878,6 +878,34 @@ const locLabel={akrotiri:'Akrotiri',larnaca:'Larnaca Lake',troodos:'Troodos',gre
 // Carousel state
 const imgCurrent={};
 
+function getImgSrc(url){
+  if(!url||!url.includes('wikimedia.org')) return url;
+  const m=url.match(/\/([^\/]+\.(?:jpg|jpeg|png|gif|svg))(?:\/\d+px-|$)/i);
+  return m?`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(m[1])}?width=400`:url;
+}
+
+async function wikiImgFallback(imgEl,birdName,latinName){
+  const queries=[latinName.split(' ').slice(0,2).join(' '),birdName];
+  for(const q of queries){
+    try{
+      const r=await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(q)}&prop=pageimages&format=json&pithumbsize=400&origin=*`);
+      const d=await r.json();
+      const page=Object.values(d.query.pages)[0];
+      if(page&&page.thumbnail&&page.thumbnail.source){
+        imgEl.onerror=null;
+        imgEl.style.display='block';
+        const fb=imgEl.nextElementSibling;
+        if(fb) fb.style.display='none';
+        imgEl.src=page.thumbnail.source;
+        return;
+      }
+    }catch(e){}
+  }
+  imgEl.style.display='none';
+  const fb=imgEl.nextElementSibling;
+  if(fb) fb.style.display='flex';
+}
+
 function changeImg(birdId,dir){
   const b=birds.find(x=>x.id===birdId);
   if(!b||!b.imgs||b.imgs.length<2) return;
@@ -885,7 +913,7 @@ function changeImg(birdId,dir){
   imgCurrent[birdId]=(imgCurrent[birdId]+dir+b.imgs.length)%b.imgs.length;
   const idx=imgCurrent[birdId];
   const img=document.getElementById('cimg-'+birdId);
-  if(img){img.style.opacity='0';setTimeout(()=>{img.src=b.imgs[idx];img.style.opacity='1';},150);}
+  if(img){img.style.opacity='0';setTimeout(()=>{img.src=getImgSrc(b.imgs[idx]);img.style.opacity='1';},150);}
   document.querySelectorAll('[id^="cdot-'+birdId+'-"]').forEach((d,i)=>d.classList.toggle('active',i===idx));
 }
 
@@ -952,7 +980,7 @@ function renderCards(list){
     const c=document.createElement('div');c.className='bird-card';c.style.animationDelay=(i*.04)+'s';
     c.innerHTML=`
       <div class="card-image-wrap">
-        <img class="card-image" id="cimg-${b.id}" src="${imgs[0]}" alt="${b.name}" style="transition:opacity .15s" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <img class="card-image" id="cimg-${b.id}" src="${getImgSrc(imgs[0])}" alt="${b.name}" style="transition:opacity .15s" onerror="wikiImgFallback(this,'${b.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')}','${b.lat.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
         <div class="card-image-fallback" style="display:none">${b.em}</div>
         ${carouselHtml}
       </div>
@@ -986,7 +1014,7 @@ function goToImg(birdId,idx){
   if(!b) return;
   imgCurrent[birdId]=idx;
   const img=document.getElementById('cimg-'+birdId);
-  if(img){img.style.opacity='0';setTimeout(()=>{img.src=b.imgs[idx];img.style.opacity='1';},150);}
+  if(img){img.style.opacity='0';setTimeout(()=>{img.src=getImgSrc(b.imgs[idx]);img.style.opacity='1';},150);}
   document.querySelectorAll('[id^="cdot-'+birdId+'-"]').forEach((d,i)=>d.classList.toggle('active',i===idx));
 }
 
