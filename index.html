@@ -713,33 +713,33 @@ const birds=[
   // ══ ENDEMIC ══
   {id:1,cat:'endemic',name:'Cyprus Warbler',ru:'Кипрская камышевка',lat:'Sylvia melanothorax',season:'Year-round',em:'🎵',
    imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Cyprus_Warbler_Larnaca.jpg/400px-Cyprus_Warbler_Larnaca.jpg'],
-   locs:['troodos','akrotiri'],
+   locs:['troodos','akrotiri','paphos'],
    desc:'National bird of Cyprus. Small greyish warbler of maquis scrub. Featured on the old ten-pound note. Declining due to competition from Sardinian Warbler.',
    eb:'https://ebird.org/species/cyiwar1',vid:'https://www.youtube.com/results?search_query=Cyprus+Warbler'},
   {id:2,cat:'endemic',name:'Cyprus Wheatear',ru:'Кипрская каменка',lat:'Oenanthe cypriaca',season:'March – October',em:'🖤',
    imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Oenanthe_cypriaca_-_Athalassa.jpg/400px-Oenanthe_cypriaca_-_Athalassa.jpg'],
-   locs:['troodos','akrotiri'],
+   locs:['troodos','akrotiri','paphos'],
    desc:'Bold black-and-white endemic. Males sing from elevated perches for hours. Breeds April–June in rock crevices, walls, trees.',
    eb:'https://ebird.org/species/cyiwhe1',vid:'https://www.youtube.com/results?search_query=Cyprus+Wheatear'},
   {id:3,cat:'endemic',name:'Cyprus Scops Owl',ru:'Кипрский сплюшка',lat:'Otus cyprius',season:'Year-round',em:'🦉',
    imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/OtusCyprius.jpg/400px-OtusCyprius.jpg'],
-   locs:['troodos'],
+   locs:['troodos','paphos'],
    desc:'Full species since 2016. Darker than Eurasian Scops Owl, lacks rufous morph. Voice distinctive. Vocal March–June.',
    eb:'https://ebird.org/species/cyisco1',vid:'https://www.youtube.com/results?search_query=Cyprus+Scops+Owl'},
   {id:4,cat:'endemic',name:'Cyprus Jay',ru:'Кипрская сойка',lat:'Garrulus glandarius glaszneri',season:'Year-round',em:'💙',
    imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Jay_-_geograph.org.uk_-_24490.jpg/400px-Jay_-_geograph.org.uk_-_24490.jpg'],
-   locs:['troodos'],
+   locs:['troodos','paphos'],
    desc:'Endemic subspecies. Rufous forehead with black streaks, vivid blue wing patches. Noisy in Troodos and Paphos forests.',
    eb:'https://ebird.org/species/eurjay3',vid:'https://www.youtube.com/results?search_query=Cyprus+Jay'},
   // ══ RESIDENT ══
   {id:5,cat:'resident',name:'Griffon Vulture',ru:'Белоголовый сип',lat:'Gyps fulvus',season:'Year-round',em:'🦅',
    imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Gyps_fulvus_-_01.jpg/400px-Gyps_fulvus_-_01.jpg','https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Gyps_fulvus_in_flight.jpg/400px-Gyps_fulvus_in_flight.jpg'],
-   locs:['akrotiri','troodos'],
+   locs:['akrotiri','troodos','paphos'],
    desc:'Largest resident raptor. Episkopi Cliffs — biggest colony on the island. Impressive soaring on thermals.',
    eb:'https://ebird.org/species/grivul1',vid:'https://www.youtube.com/results?search_query=Griffon+Vulture+Cyprus'},
   {id:6,cat:'resident',name:"Bonelli's Eagle",ru:'Орёл Бонелли',lat:'Aquila fasciata',season:'Year-round',em:'🦅',
    imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Aquila_fasciata_-_01.jpg/400px-Aquila_fasciata_-_01.jpg'],
-   locs:['troodos'],
+   locs:['troodos','paphos'],
    desc:'Powerful mountain eagle. Breeds on cliff ledges in Troodos. Fast and agile hunter.',
    eb:'https://ebird.org/species/bonea1',vid:'https://www.youtube.com/results?search_query=Bonelli+Eagle'},
   {id:7,cat:'resident',name:'Peregrine Falcon',ru:'Сапсан',lat:'Falco peregrinus',season:'Year-round',em:'⚡',
@@ -754,7 +754,7 @@ const birds=[
    eb:'https://ebird.org/species/litowl',vid:'https://www.youtube.com/results?search_query=Little+Owl+Cyprus'},
   {id:9,cat:'resident',name:'Common Hoopoe',ru:'Удод',lat:'Upupa epops',season:'Year-round',em:'👑',
    imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Common_Hoopoe.jpg/400px-Common_Hoopoe.jpg'],
-   locs:['akrotiri','troodos','oroklini'],
+   locs:['akrotiri','troodos','oroklini','paphos'],
    desc:'Unmistakable cinnamon-orange crest. Probes soil for insects with long curved bill.',
    eb:'https://ebird.org/species/comhoo1',vid:'https://www.youtube.com/results?search_query=Common+Hoopoe'},
   {id:10,cat:'resident',name:'Black-winged Stilt',ru:'Ходулочник',lat:'Himantopus himantopus',season:'Year-round',em:'🪶',
@@ -1391,6 +1391,7 @@ const birds=[
 ];
 
 const locations=[
+  {id:'paphos',name:'Pafos Forest & Coast',lat:34.96,lng:32.38,desc:'Largest pine forest in Cyprus (300km). Key habitat for Cyprus Jay, endemic subspecies. Cape Aspro sea cliffs for falcons.',key:'Cyprus Jay, Griffon Vulture, Eleonoras Falcon, Bonellis Eagle, Short-toed Eagle',url:'https://ebird.org/hotspot/L883064'},
   {id:'akrotiri',name:'Akrotiri Peninsula',lat:34.594,lng:32.970,desc:'Best overall site. 300+ species. Flamingos in winter, Demoiselle Cranes in autumn.',key:"Greater Flamingo, Demoiselle Crane, Honey Buzzard, Eleonora's Falcon, Spur-winged Lapwing",url:'https://visitakrotiri.cy/plan-your-visit/birdwatching/'},
   {id:'larnaca',name:'Larnaca Salt Lake',lat:34.884,lng:33.629,desc:'World-famous for wintering flamingos. Natura 2000 site.',key:'Greater Flamingo, Black-winged Stilt, Kentish Plover, various ducks',url:'https://rove.me/to/cyprus/greater-flamingos'},
   {id:'troodos',name:'Troodos Mountains',lat:34.924,lng:32.879,desc:'Only place to find all endemics together.',key:'Cyprus Warbler, Cyprus Wheatear, Cyprus Jay, Cyprus Coal Tit, Griffon Vulture',url:'https://ebird.org/hotspot/L883066'},
@@ -1399,7 +1400,7 @@ const locations=[
   {id:'paralimni',name:'Paralimni Lake',lat:35.042,lng:33.971,desc:'Seasonal wetland. 186 species recorded.',key:'Greater Flamingo, herons, ducks, waders',url:'https://ebird.org/region/CY-04'}
 ];
 
-const locLabel={akrotiri:'Akrotiri',larnaca:'Larnaca Lake',troodos:'Troodos',greco:'Cape Greco',oroklini:'Oroklini',paralimni:'Paralimni'};
+const locLabel={paphos:'Paphos',akrotiri:'Akrotiri',larnaca:'Larnaca Lake',troodos:'Troodos',greco:'Cape Greco',oroklini:'Oroklini',paralimni:'Paralimni'};
 
 // Carousel state
 const imgCurrent={};
@@ -1696,18 +1697,18 @@ renderCards(birds);
 // Map
 let clickLL=null;
 const _districts=[
-  {id:'paphos',name:'Paphos District',ru:'Район Пафос',color:'#b09fd4',locs:[],
-   poly:[[35.08,32.27],[35.08,32.88],[34.72,32.88],[34.60,32.78],[34.57,32.60],[34.57,32.27]]},
-  {id:'limassol',name:'Limassol District',ru:'Район Лимасол',color:'#3db8a8',locs:['akrotiri'],
-   poly:[[35.08,32.88],[35.14,33.00],[35.14,33.22],[34.87,33.42],[34.76,33.28],[34.62,33.10],[34.57,32.88],[34.72,32.88]]},
-  {id:'nicosia',name:'Nicosia District',ru:'Район Никосия',color:'#d4a84b',locs:['troodos'],
-   poly:[[35.08,32.88],[35.08,32.99],[35.18,33.18],[35.18,33.62],[35.14,33.22],[35.14,33.00]]},
-  {id:'larnaca',name:'Larnaca District',ru:'Район Ларнака',color:'#f07c8c',locs:['larnaca','oroklini'],
-   poly:[[35.14,33.22],[35.18,33.62],[35.12,33.90],[34.99,34.00],[34.83,33.74],[34.76,33.28],[34.87,33.42]]},
-  {id:'famagusta',name:'Famagusta District',ru:'Район Фамагуста',color:'#5BA4CF',locs:['greco','paralimni'],
-   poly:[[35.18,33.62],[35.18,34.07],[34.98,34.08],[34.83,33.74],[35.12,33.90]]},
   {id:'kyrenia',name:'Kyrenia District',ru:'Район Кирения',color:'#e8a87c',locs:[],
-   poly:[[35.18,32.27],[35.70,32.27],[35.70,33.65],[35.35,33.95],[35.18,33.62],[35.18,33.18],[35.08,32.99],[35.08,32.27]]}
+   poly:[[35.70,32.27],[35.70,33.62],[35.18,33.62],[35.18,33.20],[35.08,32.88],[35.08,32.27]]},
+  {id:'paphos',name:'Paphos District',ru:'Район Пафос',color:'#b09fd4',locs:['paphos'],
+   poly:[[35.08,32.27],[35.08,32.88],[34.57,32.88],[34.57,32.27]]},
+  {id:'nicosia',name:'Nicosia District',ru:'Район Никосия',color:'#d4a84b',locs:['troodos'],
+   poly:[[35.08,32.88],[35.18,33.20],[35.18,33.62],[35.14,33.22],[35.08,32.88]]},
+  {id:'limassol',name:'Limassol District',ru:'Район Лимасол',color:'#3db8a8',locs:['akrotiri'],
+   poly:[[35.08,32.88],[35.14,33.22],[34.87,33.42],[34.57,33.28],[34.57,32.88]]},
+  {id:'larnaca',name:'Larnaca District',ru:'Район Ларнака',color:'#f07c8c',locs:['larnaca','oroklini'],
+   poly:[[35.14,33.22],[35.18,33.62],[35.12,33.90],[34.83,33.74],[34.57,33.75],[34.57,33.28],[34.87,33.42]]},
+  {id:'famagusta',name:'Famagusta District',ru:'Район Фамагуста',color:'#5BA4CF',locs:['greco','paralimni'],
+   poly:[[35.18,33.62],[35.70,33.62],[35.18,34.07],[34.98,34.08],[34.57,33.75],[34.83,33.74],[35.12,33.90]]}
 ];
 
 function initDistrictLayer(map){
