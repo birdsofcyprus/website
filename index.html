@@ -14,7 +14,7 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--navy);color:var(--text);font-family:'Jost',sans-serif;font-weight:300;overflow-x:hidden;}
 .topnav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(11,15,30,.96);backdrop-filter:blur(20px);border-bottom:1px solid rgba(212,168,75,.12);padding:0 2rem;display:flex;align-items:center;height:52px;}
-.nav-logo{display:flex;align-items:center;gap:6px;margin-right:2rem;white-space:nowrap;text-decoration:none;}
+.nav-logo{display:flex;align-items:center;gap:6px;margin-right:2rem;white-space:nowrap;text-decoration:none;cursor:pointer;}
 .nav-logo img{height:36px;width:36px;object-fit:cover;border-radius:50%;flex-shrink:0;}
 .nav-logo span{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--gold-light);}
 .nav-tabs{display:flex;gap:0;flex:1;overflow-x:auto;scrollbar-width:none;}
@@ -338,7 +338,7 @@ footer a{color:var(--gold);text-decoration:none;}
 <body>
 
 <nav class="topnav">
-  <div class="nav-logo"><img src="logo.png" alt="Birds of Cyprus" style="height:36px;width:auto;vertical-align:middle;margin-right:8px"><span>Birds of Cyprus</span></div>
+  <div class="nav-logo" onclick="showPage('home')"><img src="logo.png" alt="Birds of Cyprus" style="height:36px;width:auto;vertical-align:middle;margin-right:8px"><span>Birds of Cyprus</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('home')">Home</button>
     <button class="nav-tab" onclick="showPage('atlas')">Atlas</button>
