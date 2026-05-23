@@ -885,18 +885,17 @@ function getImgSrc(url){
 }
 
 async function wikiImgFallback(imgEl,birdName,latinName){
-  const queries=[latinName.split(' ').slice(0,2).join(' '),birdName];
+  const queries=[latinName.split(' ').slice(0,2).join('_'),birdName.replace(/ /g,'_')];
   for(const q of queries){
     try{
-      const r=await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(q)}&prop=pageimages&format=json&pithumbsize=400&origin=*`);
+      const r=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(q)}`);
       const d=await r.json();
-      const page=Object.values(d.query.pages)[0];
-      if(page&&page.thumbnail&&page.thumbnail.source){
+      if(d.thumbnail&&d.thumbnail.source){
         imgEl.onerror=null;
         imgEl.style.display='block';
         const fb=imgEl.nextElementSibling;
         if(fb) fb.style.display='none';
-        imgEl.src=page.thumbnail.source;
+        imgEl.src=d.thumbnail.source;
         return;
       }
     }catch(e){}
