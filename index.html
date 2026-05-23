@@ -36,6 +36,7 @@ body{background:var(--navy);color:var(--text);font-family:'Jost',sans-serif;font
 .star{position:absolute;width:2px;height:2px;background:rgba(255,255,255,.4);border-radius:50%;animation:twinkle 3s ease-in-out infinite;}
 @keyframes twinkle{0%,100%{opacity:.3}50%{opacity:1}}
 .hero-content{position:relative;z-index:2;padding:2rem;}
+.hero-logo{width:120px;height:120px;border-radius:50%;object-fit:cover;border:2px solid rgba(212,168,75,.35);box-shadow:0 0 48px rgba(212,168,75,.12),0 0 0 10px rgba(212,168,75,.05);margin-bottom:2rem;opacity:0;animation:fadeUp .8s ease forwards;}
 .hero-eyebrow{font-size:.7rem;font-weight:500;letter-spacing:.4em;color:var(--gold);text-transform:uppercase;margin-bottom:1.5rem;opacity:0;animation:fadeUp .8s .2s ease forwards;}
 .hero-title{font-family:'Cormorant Garamond',serif;font-size:clamp(3.5rem,9vw,8rem);font-weight:300;line-height:.9;letter-spacing:-.02em;margin-bottom:.5rem;opacity:0;animation:fadeUp .8s .4s ease forwards;}
 .hero-title em{font-style:italic;color:var(--gold-light);}
@@ -336,6 +337,7 @@ footer a{color:var(--gold);text-decoration:none;}
 <section class="hero">
   <div class="stars" id="stars"></div>
   <div class="hero-content">
+    <img class="hero-logo" src="logo.png" alt="Birds of Cyprus">
     <p class="hero-eyebrow">Field Atlas · Eastern Mediterranean</p>
     <h1 class="hero-title">Birds of<br><em>Cyprus</em></h1>
     <p class="hero-subtitle">422 species · 5 endemics · one island at the crossroads of three continents</p>
@@ -1644,6 +1646,22 @@ function applyFilters(){
 document.querySelectorAll('.filter-btn').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');cf=btn.dataset.filter;applyFilters();});});
 document.getElementById('search').addEventListener('input',e=>{cs=e.target.value.trim();applyFilters();});
 renderCards(birds);
+// Circular logo (bird only — crop top 950px of 1254px to remove text)
+(function(){
+  const img=new Image();
+  img.onload=function(){
+    function circle(size){
+      const c=document.createElement('canvas');c.width=c.height=size;
+      const x=c.getContext('2d');
+      x.beginPath();x.arc(size/2,size/2,size/2,0,Math.PI*2);x.closePath();x.clip();
+      x.drawImage(img,0,0,1254,950,0,0,size,size);
+      return c.toDataURL('image/png');
+    }
+    const fav=document.querySelector('link[rel="icon"]');if(fav)fav.href=circle(64);
+    const hero=document.querySelector('.hero-logo');if(hero)hero.src=circle(240);
+  };
+  img.src='logo.png';
+})();
 
 // Map
 let clickLL=null;
