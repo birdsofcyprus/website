@@ -149,6 +149,24 @@ body{background:var(--navy);color:var(--text);font-family:'Jost',sans-serif;font
 .card-link:hover{border-color:var(--gold);color:var(--gold);}
 .card-link.video:hover{border-color:var(--flamingo);color:var(--flamingo);}
 .card-link.ebird-lnk:hover{border-color:var(--teal);color:var(--teal);}
+.bird-card{cursor:pointer;}
+
+/* BIRD DETAIL */
+#birdDetail{display:none;position:fixed;inset:0;z-index:300;background:var(--navy);overflow-y:auto;}
+#birdDetail.open{display:block;}
+.detail-topbar{position:sticky;top:0;z-index:10;background:rgba(10,14,26,.92);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.06);padding:.75rem 1.5rem;display:flex;align-items:center;gap:.8rem;}
+.detail-back-btn{background:transparent;border:1px solid rgba(255,255,255,.15);color:var(--text);padding:.38rem 1rem;border-radius:8px;cursor:pointer;font-family:'Jost',sans-serif;font-size:.8rem;letter-spacing:.04em;transition:all .2s;display:flex;align-items:center;gap:.4rem;}
+.detail-back-btn:hover{border-color:var(--gold);color:var(--gold);}
+.detail-breadcrumb{font-size:.7rem;color:var(--text-dim);letter-spacing:.04em;}
+.detail-hero{position:relative;height:320px;background:var(--navy3);overflow:hidden;}
+.detail-hero img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .15s;}
+.detail-hero-fallback{width:100%;height:100%;display:none;align-items:center;justify-content:center;font-size:7rem;background:linear-gradient(135deg,var(--navy3),var(--navy2));}
+.detail-body{padding:1.8rem 1.5rem 3rem;max-width:700px;margin:0 auto;}
+.detail-name{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:400;color:var(--gold-light);line-height:1.1;margin-bottom:.2rem;}
+.detail-ru{font-size:.95rem;color:var(--text-dim);margin-bottom:.2rem;}
+.detail-latin{font-family:'Cormorant Garamond',serif;font-size:.95rem;font-style:italic;color:var(--gold);margin-bottom:1rem;}
+.detail-desc{font-size:.88rem;line-height:1.75;color:var(--text);margin-bottom:1.2rem;}
+.detail-season{display:flex;align-items:center;gap:.5rem;font-size:.75rem;color:var(--text-dim);margin-bottom:1rem;}
 
 /* MAP */
 .map-toolbar{padding:.75rem 2rem;background:var(--navy2);border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
@@ -560,6 +578,19 @@ footer a{color:var(--gold);text-decoration:none;}
   </div>
 </section>
 <footer><p>Birds of Cyprus · Field Atlas · <a href="https://birdlifecyprus.org" target="_blank">BirdLife Cyprus</a> · <a href="https://ebird.org/region/CY" target="_blank">eBird</a> · <a href="https://xeno-canto.org" target="_blank">Xeno-Canto</a></p></footer>
+</div>
+
+<!-- BIRD DETAIL OVERLAY -->
+<div id="birdDetail">
+  <div class="detail-topbar">
+    <button class="detail-back-btn" onclick="hideBirdDetail()">&#8592; Back</button>
+    <span class="detail-breadcrumb" id="detailBreadcrumb"></span>
+  </div>
+  <div class="detail-hero" id="detailHero">
+    <img id="detailImg" src="" alt="" style="transition:opacity .15s">
+    <div class="detail-hero-fallback" id="detailFallback"></div>
+  </div>
+  <div class="detail-body" id="detailBody"></div>
 </div>
 
 <!-- MODAL -->
@@ -977,6 +1008,7 @@ function renderCards(list){
        <button class="carousel-btn carousel-next" onclick="changeImg(${b.id},1)">&#8250;</button>
        <div class="carousel-dots">${imgs.map((_,di)=>`<span class="cdot${di===0?' active':''}" id="cdot-${b.id}-${di}" onclick="goToImg(${b.id},${di})"></span>`).join('')}</div>`:'';
     const c=document.createElement('div');c.className='bird-card';c.style.animationDelay=(i*.04)+'s';
+    c.addEventListener('click',e=>{if(!e.target.closest('button,a,.loc-badge,.cdot'))showBirdDetail(b.id);});
     c.innerHTML=`
       <div class="card-image-wrap">
         <img class="card-image" id="cimg-${b.id}" src="${getImgSrc(imgs[0])}" alt="${b.name}" style="transition:opacity .15s" onerror="wikiImgFallback(this,'${b.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')}','${b.lat.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
@@ -1091,6 +1123,57 @@ function openModal(){
   document.getElementById('modalOverlay').classList.add('open');
 }
 function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
+
+// Bird detail view
+let _detailState={id:null,idx:0,imgs:[]};
+function showBirdDetail(id){
+  const b=birds.find(x=>x.id===id);if(!b)return;
+  const imgs=b.imgs||[b.img];
+  _detailState={id,idx:0,imgs};
+  document.getElementById('detailBreadcrumb').textContent=b.name+' · '+b.ru;
+  const img=document.getElementById('detailImg');
+  img.src=getImgSrc(imgs[0]);
+  img.alt=b.name;
+  img.onerror=()=>wikiImgFallback(img,b.name,b.lat);
+  img.style.opacity='1';
+  const fallback=document.getElementById('detailFallback');
+  fallback.textContent=b.em;fallback.style.display='none';
+  const hero=document.getElementById('detailHero');
+  const dots=imgs.length>1?'<div class="carousel-dots" style="position:absolute;bottom:.6rem;left:50%;transform:translateX(-50%)">'+imgs.map((_,i)=>`<span class="cdot${i===0?' active':''}" id="dcdot-${id}-${i}" onclick="detailGoImg(${id},${i})"></span>`).join('')+'</div>':'';
+  const prevnext=imgs.length>1?`<button class="carousel-btn carousel-prev" onclick="detailChangeImg(${id},-1)">&#8249;</button><button class="carousel-btn carousel-next" onclick="detailChangeImg(${id},1)">&#8250;</button>`:'';
+  hero.querySelectorAll('.carousel-btn,.carousel-dots').forEach(el=>el.remove());
+  hero.insertAdjacentHTML('beforeend',prevnext+dots);
+  const locsHtml=(b.locs&&b.locs.length)?'<div class="bird-locs" style="margin-bottom:1.2rem">'+b.locs.map(l=>`<span class="loc-badge" onclick="hideBirdDetail();goToMap('${l}')" title="View on map">${locLabel[l]||l}</span>`).join('')+'</div>':'';
+  document.getElementById('detailBody').innerHTML=`
+    <span class="card-badge badge-${b.cat}" style="margin-bottom:.8rem;display:inline-block">${catLabel(b.cat)}</span>
+    <div class="detail-name">${b.name}</div>
+    <div class="detail-ru">${b.ru}</div>
+    <div class="detail-latin">${b.lat}</div>
+    <div class="detail-desc">${b.desc}</div>
+    <div class="detail-season"><span class="season-dot" style="background:${catColor(b.cat)}"></span>${b.season}</div>
+    ${locsHtml}
+    <div class="card-links" style="margin-top:1.5rem">
+      <a class="card-link ebird-lnk" href="${b.eb}" target="_blank">eBird →</a>
+      <a class="card-link video" href="${b.vid}" target="_blank">▶ Video</a>
+      <a class="card-link" href="https://xeno-canto.org/explore?query=${encodeURIComponent(b.lat.split(' ').slice(0,2).join(' '))}" target="_blank">🎵 Sounds ↗</a>
+    </div>`;
+  document.getElementById('birdDetail').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function hideBirdDetail(){
+  document.getElementById('birdDetail').classList.remove('open');
+  document.body.style.overflow='';
+}
+function detailChangeImg(id,dir){
+  _detailState.idx=(_detailState.idx+dir+_detailState.imgs.length)%_detailState.imgs.length;
+  detailGoImg(id,_detailState.idx);
+}
+function detailGoImg(id,idx){
+  _detailState.idx=idx;
+  const img=document.getElementById('detailImg');
+  if(img){img.style.opacity='0';setTimeout(()=>{img.src=getImgSrc(_detailState.imgs[idx]);img.style.opacity='1';},150);}
+  document.querySelectorAll(`[id^="dcdot-${id}-"]`).forEach((d,i)=>d.classList.toggle('active',i===idx));
+}
 function previewPhoto(input){
   const f=input.files[0];if(!f)return;
   const r=new FileReader();r.onload=e=>{const i=document.getElementById('photoPreview');i.src=e.target.result;i.style.display='block';};r.readAsDataURL(f);
